@@ -1,0 +1,27 @@
+{% extends 'shop/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Colonne pour l'image -->
+        <div class="col-md-6 d-flex justify-content-center align-items-center">
+            <img src="{{ product.image }}" class="img-fluid rounded" style="max-width: 100%; height: auto; max-height: 500px;" alt="Image du produit">
+        </div>
+
+        <!-- Colonne pour les détails -->
+        <div class="col-md-6">
+            <div class="mb-4">
+                <h1 id="aa{{ product.id }}" class="card-title">{{ product.title }}</h1>
+                <!-- Titre du produit -->
+            </div>
+            <div class="mb-3">
+                <h4 class="text-danger">Prix : {{ product.price }} Francs</h4> <!-- Prix du produit -->
+            </div>
+            <div class="mb-4">
+                <p>{{ product.description }}</p> <!-- Description -->
+            </div>
+            <a href="#" class="btn btn-success">Acheter</a> <!-- Bouton Acheter -->
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <form class="card card-sm">
+            <div class="card-body row no-gutters align-items-center">
+                <div class="col">
+                    <input type="search" 
+                           name="item-name" 
+                           class="form-control form-control-borderless" 
+                           placeholder="Entrez le nom du produit que vous cherchez">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success">Rechercher</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mt-3">
+    {% for product in product_object %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <img src="{{ product.image }}" alt="{{ product.title }}" class="card-img-top">
+            <div class="card-body">
+                <div id="aa{{ product.id }}" class="card-title">{{ product.title }}</div>
+                <p style="color:orange" id="price{{product.id}}" class="card-text">{{ product.price }} Francs</p>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'detail' product.id %}" class="btn btn-warning">Voir</a>
+                    <button id="{{ product.id }}" class="btn ted btn-success">Ajouter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-3 offset-md-4">
+        <ul class="pagination">
+            {% if product_object.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ product_object.previous_page_number }}">Précédent</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <a class="page-link" href="?page={{ product_object.number }}">{{ product_object.number }}</a>
+            </li>
+
+            {% if product_object.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ product_object.next_page_number }}">Suivant</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    // Initialisation ou récupération du panier dans localStorage
+    let panier = localStorage.getItem('panier') ? JSON.parse(localStorage.getItem('panier')) : {};
+
+    // Fonction pour mettre à jour l'affichage du nombre d'articles dans le panier
+    function updatePanierCount() {
+        const totalItems = Object.values(panier).reduce((sum, item) => sum + item.quantity, 0); // Calcul total
+        document.getElementById("panier").innerHTML = `Panier(${totalItems})`; // Mise à jour de l'affichage
+    }
+
+    // Mise à jour initiale à l'ouverture de la page
+    updatePanierCount();
+
+    // Écoute des clics sur les boutons "Ajouter"
+    $(document).on('click', '.ted', function () {
+        const itemId = this.id.toString(); // ID du produit cliqué
+        const titleElement = document.getElementById("aa" + itemId);
+        const title = titleElement ? titleElement.innerText : "Titre non disponible";
+        const prixElement = document.getElementById("price" + itemId);
+        const prix = prixElement ? parseFloat(prixElement.innerText.replace('Francs', '').trim()) : 0;
+
+        // Vérification si l'article est déjà dans le panier
+        if (panier[itemId]) {
+            panier[itemId].quantity += 1; // Augmenter la quantité si présent
+            panier[itemId].totalPrice = panier[itemId].quantity * panier[itemId].prix;
+        } else {
+            prix = parseFloat(document.getElementById("price" + itemId).innerHTML);
+            panier[itemId] = { quantity: 1, title: title, totalPrice:prix}; // Ajouter un nouvel article avec titre
+            
+        }
+
+        // Mise à jour du panier dans localStorage
+        localStorage.setItem('panier', JSON.stringify(panier));
+
+        // Mise à jour de l'affichage
+        updatePanierCount();
+        AfficherList();
+    });
+
+    // Fonction pour afficher la liste des articles dans le popover
+    function AfficherList() {
+        let panierString = "<h5>Voici votre liste</h5>";
+        let index = 1;
+
+        // Gestion du cas où le panier est vide
+        if (Object.keys(panier).length === 0) {
+            panierString = "<h5>Votre panier est vide</h5>";
+        } else {
+            // Construction de la liste des articles dans le panier
+            for (let itemId in panier) {
+                const item = panier[itemId];
+                panierString += `<p>${index}. ${item.title} - Qte : ${item.quantity}</p>`;
+                index += 1;
+            }
+        }
+        panierString += `<a href="/checkout" class="btn btn-primary mt-2">Checkout</a>`;
+
+        // Mise à jour dynamique du contenu du popover
+        document.getElementById('panier').setAttribute('data-bs-content', panierString);
+    }
+
+    // Initialisation du popover Bootstrap 5
+    $(function () {
+        $('[data-bs-toggle="popover"]').popover({
+            html: true, // Permet d'utiliser du HTML dans le contenu
+            trigger: 'click' // Affiche le popover au clic
+        });
+
+        // Mise à jour initiale du contenu du popover
+        AfficherList();
+    });
+</script>
+{% endblock %}

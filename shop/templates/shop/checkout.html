@@ -1,0 +1,122 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h3 class="text-center">Voici votre liste</h3>
+        <table class="table table-bordered">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Nom de l'article</th>
+                    <th>Quantité</th>
+                    <th>Prix Unitaire</th>
+                    <th>Prix Total</th>
+                </tr>
+            </thead>
+            <tbody id="item-list">
+                <!-- Les articles du panier seront affichés ici via JavaScript -->
+            </tbody>
+            <tfoot>
+                <tr class="table-success text-center">
+                    <th colspan="1">Totaux</th>
+                    <th id="quantite-total">0</th>
+                    <th colspan="1"> - </th>
+                    <th id="prix-total">0 Francs</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <form method="POST" class="row g-3">
+            {% csrf_token %}
+
+            <input type="hidden" id="items" name="items"> <!-- Champ caché -->
+            <div class="col-md-6">
+                <label for="nom" class="form-label">Nom</label>
+                <input type="text" name="nom" id="nom" class="form-control" placeholder="Amougou">
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Amougou@gmail.com">
+            </div>
+            <div class="col-md-12">
+                <label for="address" class="form-label">Adresse</label>
+                <input type="text" name="address" id="address" class="form-control" placeholder="Bastos Yde" required>
+            </div>
+            <div class="col-md-6">
+                <label for="ville" class="form-label">Ville</label>
+                <input type="text" name="ville" id="ville" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="pays" class="form-label">Pays</label>
+                <select id="pays" name="pays" class="form-select">
+                    <option selected>Cameroun</option>
+                    <option>Côte d'Ivoire</option>
+                    <option>France</option>
+                    <option>Canada</option>
+                    <option>USA</option>
+                    <option>Tchad</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="zipcode" class="form-label">Code postal</label>
+                <input name="zipcode" id="zipcode" type="text" class="form-control">
+            </div>
+            <div class="col-md-2">
+              <label for="zipcode" class="form-label">Somme total a payer</label>
+              <input name="total" id="total" type="readonly" class="bg-dark text-warning form-control">
+          </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Commander</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    // Vérifiez si le panier existe dans le localStorage
+    let panier = localStorage.getItem('panier') ? JSON.parse(localStorage.getItem('panier')) : {};
+
+    let quantiteTotale = 0;
+    let prixTotalGeneral = 0;
+
+    // Parcourez les items dans le panier et affichez-les dans un tableau
+    for (let itemId in panier) {
+        let item = panier[itemId]; // Obtenez les détails de l'article
+        let nom = item.title; // Nom de l'article
+        let quantite = item.quantity; // Quantité de l'article
+        let prixUnitaire = item.prix; // Prix unitaire
+        let prixTotal = quantite * prixUnitaire; // Calcul du prix total
+
+        // Ajoutez les valeurs aux totaux globaux
+        quantiteTotale += quantite;
+        prixTotalGeneral += prixTotal;
+
+        // Générez le HTML pour chaque ligne
+        let row = `
+            <tr class="text-center">
+                <td>${nom}</td>
+                <td>${quantite}</td>
+                <td>${prixUnitaire} Francs</td>
+                <td>${prixTotal} Francs</td>
+            </tr>`;
+        
+        // Ajoutez la ligne au tableau
+        document.getElementById('item-list').innerHTML += row;
+    }
+
+    $('#total').val(prixTotalGeneral + "Francs");
+
+    // Mettez à jour les totaux dans le tableau
+    document.getElementById('quantite-total').textContent = quantiteTotale;
+    document.getElementById('prix-total').textContent = `${prixTotalGeneral} Francs`;
+
+    // Mettez à jour le champ caché avec les données du panier
+    document.getElementById('items').value = JSON.stringify(panier);
+</script>
+{% endblock %}
